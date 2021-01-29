@@ -1,6 +1,6 @@
 # Copyright 2016-2017 Akretion (http://www.akretion.com)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
-# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+# License AGPL-2.1 or later (https://www.gnu.org/licenses/agpl).
 
 import base64
 from lxml import etree
@@ -21,6 +21,13 @@ class AccountInvoice(models.Model):
         ubl_version = etree.SubElement(
             parent_node, ns['cbc'] + 'UBLVersionID')
         ubl_version.text = version
+        ubl_customization_id = etree.SubElement(
+            parent_node, ns['cbc'] + 'CustomizationID')
+        ubl_customization_id.text = 'urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0'
+        ubl_profile_id = etree.SubElement(
+            parent_node, ns['cbc'] + 'ProfileID')
+        ubl_profile_id.text = 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0'
+        
         doc_id = etree.SubElement(parent_node, ns['cbc'] + 'ID')
         doc_id.text = self.number
         issue_date = etree.SubElement(parent_node, ns['cbc'] + 'IssueDate')
@@ -146,11 +153,8 @@ class AccountInvoice(models.Model):
             line_root, ns['cbc'] + 'LineExtensionAmount',
             currencyID=cur_name)
         line_amount.text = '%0.*f' % (account_precision, iline.price_subtotal)
-        self._ubl_add_invoice_line_tax_total(
-            iline, line_root, ns, version=version)
         self._ubl_add_item(
-            iline.name, iline.product_id, line_root, ns, type='sale',
-            version=version)
+            iline.name, iline.product_id, line_root, ns, type = 'sale', version=version)
         price_node = etree.SubElement(line_root, ns['cac'] + 'Price')
         price_amount = etree.SubElement(
             price_node, ns['cbc'] + 'PriceAmount', currencyID=cur_name)
@@ -169,6 +173,7 @@ class AccountInvoice(models.Model):
         else:
             base_qty = etree.SubElement(price_node, ns['cbc'] + 'BaseQuantity')
         base_qty.text = '%0.*f' % (qty_precision, qty)
+        
 
     def _ubl_add_invoice_line_tax_total(
             self, iline, parent_node, ns, version='2.1'):
@@ -182,6 +187,7 @@ class AccountInvoice(models.Model):
         tax_total = float_round(
             res_taxes['total_included'] - res_taxes['total_excluded'],
             precision_digits=prec)
+        
         tax_amount_node = etree.SubElement(
             tax_total_node, ns['cbc'] + 'TaxAmount', currencyID=cur_name)
         tax_amount_node.text = '%0.*f' % (prec, tax_total)
@@ -189,9 +195,10 @@ class AccountInvoice(models.Model):
             for res_tax in res_taxes['taxes']:
                 tax = self.env['account.tax'].browse(res_tax['id'])
                 # we don't have the base amount in res_tax :-(
-                self._ubl_add_tax_subtotal(
-                    False, res_tax['amount'], tax, cur_name, tax_total_node,
-                    ns, version=version)
+                # ~ self._ubl_add_tax_subtotal(
+                    # ~ False, res_tax['amount'], tax, cur_name, tax_total_node,
+                    # ~ ns, version=version)
+        
 
     def _ubl_add_tax_total(self, xml_root, ns, version='2.1'):
         self.ensure_one()
@@ -206,6 +213,10 @@ class AccountInvoice(models.Model):
                 self._ubl_add_tax_subtotal(
                     tline.base, tline.amount, tline.tax_id, cur_name,
                     tax_total_node, ns, version=version)
+    
+        
+        
+        
 
     @api.multi
     def generate_invoice_ubl_xml_etree(self, version='2.1'):

@@ -18,8 +18,9 @@ class BaseUbl(models.AbstractModel):
             payment_identifier=None, version='2.1'):
         pay_means = etree.SubElement(parent_node, ns['cac'] + 'PaymentMeans')
         pay_means_code = etree.SubElement(
-            pay_means, ns['cbc'] + 'PaymentMeansCode', listID="UN/ECE 4461")
-        # Why not schemeAgencyID='6' + schemeID
+            pay_means, ns['cbc'] + 'PaymentMeansCode', name=payment_mode.payment_method_id.name)
+        pay_means_code.text = str(payment_mode.payment_method_id)
+        
         if payment_mode:  # type is a required field on payment_mode
             if not payment_mode.payment_method_id.unece_id:
                 raise UserError(_(
@@ -33,10 +34,6 @@ class BaseUbl(models.AbstractModel):
                 'Missing payment mode on invoice ID %d. '
                 'Using 31 (wire transfer) as UNECE code as fallback '
                 'for payment mean', self.id)
-        if date_due:
-            pay_due_date = etree.SubElement(
-                pay_means, ns['cbc'] + 'PaymentDueDate')
-            pay_due_date.text = date_due.strftime('%Y-%m-%d')
         if pay_means_code.text in ['30', '31', '42']:
             if (
                     not partner_bank and
@@ -47,9 +44,9 @@ class BaseUbl(models.AbstractModel):
             if partner_bank and partner_bank.acc_type == 'iban':
                 # In the Chorus specs, they except 'IBAN' in PaymentChannelCode
                 # I don't know if this usage is common or not
-                payment_channel_code = etree.SubElement(
-                    pay_means, ns['cbc'] + 'PaymentChannelCode')
-                payment_channel_code.text = 'IBAN'
+                # ~ payment_channel_code = etree.SubElement(
+                    # ~ pay_means, ns['cbc'] + 'PaymentChannelCode')
+                # ~ payment_channel_code.text = 'IBAN'
                 if payment_identifier:
                     payment_id = etree.SubElement(
                         pay_means, ns['cbc'] + 'PaymentID')
@@ -57,16 +54,16 @@ class BaseUbl(models.AbstractModel):
                 payee_fin_account = etree.SubElement(
                     pay_means, ns['cac'] + 'PayeeFinancialAccount')
                 payee_fin_account_id = etree.SubElement(
-                    payee_fin_account, ns['cbc'] + 'ID', schemeName='IBAN')
+                    payee_fin_account, ns['cbc'] + 'ID')
                 payee_fin_account_id.text =\
                     partner_bank.sanitized_acc_number
                 if partner_bank.bank_bic:
                     financial_inst_branch = etree.SubElement(
                         payee_fin_account,
                         ns['cac'] + 'FinancialInstitutionBranch')
-                    financial_inst = etree.SubElement(
-                        financial_inst_branch,
-                        ns['cac'] + 'FinancialInstitution')
+                    # ~ financial_inst = etree.SubElement(
+                        # ~ financial_inst_branch,
+                        # ~ ns['cac'] + 'FinancialInstitution')
                     financial_inst_id = etree.SubElement(
-                        financial_inst, ns['cbc'] + 'ID', schemeName='BIC')
+                        financial_inst_branch, ns['cbc'] + 'ID')
                     financial_inst_id.text = partner_bank.bank_bic
