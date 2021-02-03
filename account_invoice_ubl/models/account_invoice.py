@@ -161,10 +161,10 @@ class AccountInvoice(models.Model):
         price_unit = 0.0
         # Use price_subtotal/qty to compute price_unit to be sure
         # to get a *tax_excluded* price unit
-        if not float_is_zero(qty, precision_digits=qty_precision):
-            price_unit = float_round(
-                iline.price_subtotal / float(qty),
-                precision_digits=price_precision)
+        # ~ if not float_is_zero(qty, precision_digits=qty_precision):
+        price_unit = float_round(
+            iline.price_subtotal / float(qty),
+            precision_digits=price_precision)
         price_amount.text = '%0.*f' % (price_precision, price_unit)
         if uom_unece_code:
             base_qty = etree.SubElement(
@@ -191,13 +191,17 @@ class AccountInvoice(models.Model):
         tax_amount_node = etree.SubElement(
             tax_total_node, ns['cbc'] + 'TaxAmount', currencyID=cur_name)
         tax_amount_node.text = '%0.*f' % (prec, tax_total)
-        if not float_is_zero(tax_total, precision_digits=prec):
-            for res_tax in res_taxes['taxes']:
-                tax = self.env['account.tax'].browse(res_tax['id'])
-                # we don't have the base amount in res_tax :-(
-                # ~ self._ubl_add_tax_subtotal(
-                    # ~ False, res_tax['amount'], tax, cur_name, tax_total_node,
-                    # ~ ns, version=version)
+        # ~ if not float_is_zero(tax_total, precision_digits=prec):
+        for res_tax in res_taxes['taxes']:
+            tax = self.env['account.tax'].browse(res_tax['id'])
+            # we don't have the base amount in res_tax :-(
+        self._ubl_add_tax_subtotal(
+            False, res_tax['amount'], tax, cur_name, tax_total_node,
+            ns, version=version)
+        # ~ else:
+            # ~ self._ubl_add_tax_subtotal(
+                        # ~ False, False, False, False, tax_total_node,
+                        # ~ ns, version=version)
         
 
     def _ubl_add_tax_total(self, xml_root, ns, version='2.1'):
@@ -208,11 +212,19 @@ class AccountInvoice(models.Model):
             tax_total_node, ns['cbc'] + 'TaxAmount', currencyID=cur_name)
         prec = self.currency_id.decimal_places
         tax_amount_node.text = '%0.*f' % (prec, self.amount_tax)
-        if not float_is_zero(self.amount_tax, precision_digits=prec):
-            for tline in self.tax_line_ids:
-                self._ubl_add_tax_subtotal(
-                    tline.base, tline.amount, tline.tax_id, cur_name,
-                    tax_total_node, ns, version=version)
+        # ~ if not float_is_zero(self.amount_tax, precision_digits=prec):
+        for tline in self.tax_line_ids:
+            self._ubl_add_tax_subtotal(
+                tline.base, tline.amount, tline.tax_id, cur_name,
+                tax_total_node, ns, version=version)
+        # ~ else:
+            # ~ self._ubl_add_tax_subtotal(
+                   # ~ False, False, False, False,
+                    # ~ tax_total_node, ns, version=version)
+        
+            
+    
+            
     
         
         

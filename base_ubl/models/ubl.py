@@ -179,7 +179,7 @@ class BaseUbl(models.AbstractModel):
         self._ubl_add_party_identification(
             commercial_partner, party, ns, version=version)
         endpoint_id = etree.SubElement(party, ns['cbc'] + 'EndpointID',schemeID='0088')
-        endpoint_id.text = "9482348239847239874"
+        endpoint_id.text = commercial_partner.gln_number_vertel
         # ~ raise Warning(endpoint_id.text)
         party_identification = etree.SubElement(party, ns['cac'] + 'PartyIdentification')
         party_id = etree.SubElement(party_identification, ns['cbc'] + 'ID')
@@ -328,10 +328,10 @@ class BaseUbl(models.AbstractModel):
             price_unit = 0.0
             # Use price_subtotal/qty to compute price_unit to be sure
             # to get a *tax_excluded* price unit
-            if not float_is_zero(quantity, precision_digits=qty_precision):
-                price_unit = float_round(
-                    price_subtotal / float(quantity),
-                    precision_digits=price_precision)
+            # ~ if not float_is_zero(quantity, precision_digits=qty_precision):
+            price_unit = float_round(
+                price_subtotal / float(quantity),
+                precision_digits=price_precision)
             price = etree.SubElement(
                 line_item, ns['cac'] + 'Price')
             price_amount = etree.SubElement(
@@ -386,14 +386,13 @@ class BaseUbl(models.AbstractModel):
                 std_identification = etree.SubElement(
                     item, ns['cac'] + 'StandardItemIdentification')
                 std_identification_id = etree.SubElement(
-                    std_identification, ns['cbc'] + 'ID',
-                    schemeAgencyID='6', schemeID='GTIN')
+                    std_identification, ns['cbc'] + 'ID')
                 std_identification_id.text = product.barcode
             # I'm not 100% sure, but it seems that ClassifiedTaxCategory
             # contains the taxes of the product without taking into
             # account the fiscal position
             if type == 'sale':
-                taxes = product.taxes_id
+                taxes = product.taxes_id 
                 # ~ raise Warning(tax)
                 for tax in taxes:
                     self._ubl_add_tax_category(
@@ -401,7 +400,7 @@ class BaseUbl(models.AbstractModel):
                         version=version)
                 
             else:
-                taxes = product.supplier_taxes_id
+                taxes = product.supplier_taxes_id or None
             for attribute_value in product.attribute_value_ids:
                 item_property = etree.SubElement(
                     item, ns['cac'] + 'AdditionalItemProperty')
@@ -419,34 +418,35 @@ class BaseUbl(models.AbstractModel):
             parent_node, ns, version='2.1'):
         prec = self.env['decimal.precision'].precision_get('Account')
         tax_subtotal = etree.SubElement(parent_node, ns['cac'] + 'TaxSubtotal')
-        if not float_is_zero(taxable_amount, precision_digits=prec):
-            taxable_amount_node = etree.SubElement(
-                tax_subtotal, ns['cbc'] + 'TaxableAmount',
-                currencyID=currency_code)
-            taxable_amount_node.text = '%0.*f' % (prec, taxable_amount)
+        # ~ if not float_is_zero(taxable_amount, precision_digits=prec):
+        taxable_amount_node = etree.SubElement(
+            tax_subtotal, ns['cbc'] + 'TaxableAmount',
+            currencyID=currency_code or 'None')
+        taxable_amount_node.text = '%0.*f' % (prec, taxable_amount) 
         tax_amount_node = etree.SubElement(
-            tax_subtotal, ns['cbc'] + 'TaxAmount', currencyID=currency_code)
-        tax_amount_node.text = '%0.*f' % (prec, tax_amount)
-        # ~ if (
-                # ~ tax.amount_type == 'percent' and
-                # ~ not float_is_zero(tax.amount, precision_digits=prec+3)):
-            # ~ percent = etree.SubElement(
-                # ~ tax_subtotal, ns['cbc'] + 'Percent')
-            # ~ percent.text = str(
-                # ~ float_round(tax.amount, precision_digits=2))
+            tax_subtotal, ns['cbc'] + 'TaxAmount', currencyID=currency_code or '')
+        tax_amount_node.text = '%0.*f' % (prec, tax_amount)  
+        # ~ if tax.amount_type == 'percent':
+        # ~ percent = etree.SubElement(
+            # ~ tax_subtotal, ns['cbc'] + 'Percent')
+        # ~ percent.text = str(
+            # ~ float_round(tax.amount, precision_digits=2))
         self._ubl_add_tax_category(tax, tax_subtotal, ns, version=version)
+        
 
     @api.model
     def _ubl_add_tax_category(
             self, tax, parent_node, ns, node_name='TaxCategory',
             version='2.1'):
         tax_category = etree.SubElement(parent_node, ns['cac'] + node_name)
-        # ~ if not tax.unece_categ_id:
-            # ~ raise UserError(_(
-                # ~ "Missing UNECE Tax Category on tax '%s'" % tax.name))
+        # ~ raise Warning(tax)
+        if not tax.unece_categ_id:
+            raise UserError(_(
+                "Missing UNECE Tax Category on tax '%s'" % tax.name))
         tax_category_id = etree.SubElement(
             tax_category, ns['cbc'] + 'ID')
         tax_category_id.text = tax.unece_categ_code
+        # ~ raise Warning(tax_category_id.text)
         if tax.amount_type == 'percent':
             tax_percent = etree.SubElement(
                 tax_category, ns['cbc'] + 'Percent')
