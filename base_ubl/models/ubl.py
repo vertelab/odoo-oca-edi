@@ -179,11 +179,11 @@ class BaseUbl(models.AbstractModel):
         self._ubl_add_party_identification(
             commercial_partner, party, ns, version=version)
         endpoint_id = etree.SubElement(party, ns['cbc'] + 'EndpointID',schemeID='0088')
-        endpoint_id.text = commercial_partner.gln_number_vertel
+        endpoint_id.text = commercial_partner.gln_number_vertel or None
         # ~ raise Warning(endpoint_id.text)
         party_identification = etree.SubElement(party, ns['cac'] + 'PartyIdentification')
         party_id = etree.SubElement(party_identification, ns['cbc'] + 'ID')
-        party_id.text = commercial_partner.zip or "123456"
+        party_id.text = commercial_partner.zip or None
         party_name = etree.SubElement(party, ns['cac'] + 'PartyName')
         name = etree.SubElement(party_name, ns['cbc'] + 'Name')
         name.text = commercial_partner.name
