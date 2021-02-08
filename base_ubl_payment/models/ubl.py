@@ -18,7 +18,7 @@ class BaseUbl(models.AbstractModel):
             payment_identifier=None, version='2.1'):
         pay_means = etree.SubElement(parent_node, ns['cac'] + 'PaymentMeans')
         pay_means_code = etree.SubElement(
-            pay_means, ns['cbc'] + 'PaymentMeansCode', name=payment_mode.payment_method_id.name)
+            pay_means, ns['cbc'] + 'PaymentMeansCode', name=payment_mode.payment_method_id.name or 'No Peppol')
         pay_means_code.text = str(payment_mode.payment_method_id)
         
         if payment_mode:  # type is a required field on payment_mode
