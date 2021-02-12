@@ -160,7 +160,7 @@ class BaseUbl(models.AbstractModel):
             parent_node, ns['cac'] + 'PartyLegalEntity')
         registration_name = etree.SubElement(
             party_legal_entity, ns['cbc'] + 'RegistrationName')
-        registration_name.text = partner.name
+        registration_name.text = partner.name if partner.name else partner.parent_id.name
         # ~ company_id = etree.SubElement(
             # ~ registration_name, ns['cbc'] + 'CompanyID')
         # ~ company_id.text = commercial_partner.vat or 'SE1234567'
@@ -186,7 +186,7 @@ class BaseUbl(models.AbstractModel):
         party_id.text = commercial_partner.zip or None
         party_name = etree.SubElement(party, ns['cac'] + 'PartyName')
         name = etree.SubElement(party_name, ns['cbc'] + 'Name')
-        name.text = commercial_partner.name
+        name.text = commercial_partner.name if commercial_partner.name else partner.parent_id.name
         
         
         self._ubl_add_address(
