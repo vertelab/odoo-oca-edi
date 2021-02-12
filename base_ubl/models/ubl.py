@@ -386,7 +386,7 @@ class BaseUbl(models.AbstractModel):
                 std_identification = etree.SubElement(
                     item, ns['cac'] + 'StandardItemIdentification')
                 std_identification_id = etree.SubElement(
-                    std_identification, ns['cbc'] + 'ID')
+                    std_identification, ns['cbc'] + 'ID',schemeID= '0160')
                 std_identification_id.text = product.barcode
             # I'm not 100% sure, but it seems that ClassifiedTaxCategory
             # contains the taxes of the product without taking into
