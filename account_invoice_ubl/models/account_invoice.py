@@ -253,10 +253,10 @@ class AccountInvoice(models.Model):
             self._ubl_add_delivery(self.partner_shipping_id, xml_root, ns)
         # Put paymentmeans block even when invoice is paid ?
         payment_identifier = self.get_payment_identifier()
-        # ~ self._ubl_add_payment_means(
-            # ~ self.partner_bank_id, self.payment_mode_id, self.date_due,
-            # ~ xml_root, ns, payment_identifier=payment_identifier,
-            # ~ version=version)
+        self._ubl_add_payment_means(
+            self.partner_bank_id, self.payment_mode_id, self.date_due,
+            xml_root, ns, payment_identifier=payment_identifier,
+            version=version)
         if self.payment_term_id:
             self._ubl_add_payment_terms(
                 self.payment_term_id, xml_root, ns, version=version)
