@@ -158,12 +158,12 @@ class BaseUbl(models.AbstractModel):
         commercial_partner = partner.commercial_partner_id
         party_legal_entity = etree.SubElement(
             parent_node, ns['cac'] + 'PartyLegalEntity')
-        registration_name = etree.SubElement(
-            party_legal_entity, ns['cbc'] + 'RegistrationName')
-        registration_name.text = partner.name if partner.name else partner.parent_id.name
-        # ~ company_id = etree.SubElement(
-            # ~ registration_name, ns['cbc'] + 'CompanyID')
-        # ~ company_id.text = commercial_partner.vat or 'SE1234567'
+        # ~ registration_name = etree.SubElement(
+            # ~ party_legal_entity, ns['cbc'] + 'RegistrationName')
+        # ~ registration_name.text = partner.name or partner.parent_id.name
+        company_id = etree.SubElement(
+            party_legal_entity, ns['cbc'] + 'CompanyID')
+        company_id.text = partner.company_org_number or commercial_partner.company_org_number
         # ~ self._ubl_add_address(
             # ~ commercial_partner, 'RegistrationAddress', party_legal_entity,
             # ~ ns, version=version)
@@ -183,7 +183,7 @@ class BaseUbl(models.AbstractModel):
         # ~ raise Warning(endpoint_id.text)
         party_identification = etree.SubElement(party, ns['cac'] + 'PartyIdentification')
         party_id = etree.SubElement(party_identification, ns['cbc'] + 'ID')
-        party_id.text = commercial_partner.zip or None
+        party_id.text = commercial_partner.gln_number_vertel or commercial_partner.company_org_number or commercial_partner.vat or None
         party_name = etree.SubElement(party, ns['cac'] + 'PartyName')
         name = etree.SubElement(party_name, ns['cbc'] + 'Name')
         name.text = commercial_partner.name if commercial_partner.name else partner.parent_id.name
@@ -474,7 +474,7 @@ class BaseUbl(models.AbstractModel):
         # ~ if tax_scheme_dict.get('id'):
         tax_scheme_id = etree.SubElement(
             tax_scheme, ns['cbc'] + 'ID')
-        tax_scheme_id.text = 'VAT'
+        tax_scheme_id.text = 'Godkänd för F-skatt'
         if tax_scheme_dict.get('name'):
             tax_scheme_name = etree.SubElement(tax_scheme, ns['cbc'] + 'Name')
             tax_scheme_name.text = tax_scheme_dict['name']

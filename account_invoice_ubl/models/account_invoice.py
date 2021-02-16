@@ -44,6 +44,9 @@ class AccountInvoice(models.Model):
         doc_currency = etree.SubElement(
             parent_node, ns['cbc'] + 'DocumentCurrencyCode')
         doc_currency.text = self.currency_id.name
+        buyer_ref = etree.SubElement(
+            parent_node, ns['cbc'] + 'BuyerReference')
+        buyer_ref.text = self.commercial_partner_id.name
 
     @api.multi
     def _ubl_add_order_reference(self, parent_node, ns, version='2.1'):
@@ -53,7 +56,7 @@ class AccountInvoice(models.Model):
                 parent_node, ns['cac'] + 'OrderReference')
             order_ref_id = etree.SubElement(
                 order_ref, ns['cbc'] + 'ID')
-            order_ref_id.text = self.name
+            order_ref_id.text = self.origin
 
     @api.multi
     def _ubl_get_contract_document_reference_dict(self):
@@ -250,10 +253,10 @@ class AccountInvoice(models.Model):
             self._ubl_add_delivery(self.partner_shipping_id, xml_root, ns)
         # Put paymentmeans block even when invoice is paid ?
         payment_identifier = self.get_payment_identifier()
-        self._ubl_add_payment_means(
-            self.partner_bank_id, self.payment_mode_id, self.date_due,
-            xml_root, ns, payment_identifier=payment_identifier,
-            version=version)
+        # ~ self._ubl_add_payment_means(
+            # ~ self.partner_bank_id, self.payment_mode_id, self.date_due,
+            # ~ xml_root, ns, payment_identifier=payment_identifier,
+            # ~ version=version)
         if self.payment_term_id:
             self._ubl_add_payment_terms(
                 self.payment_term_id, xml_root, ns, version=version)
