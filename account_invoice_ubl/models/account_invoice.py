@@ -27,11 +27,12 @@ class AccountInvoice(models.Model):
         ubl_profile_id = etree.SubElement(
             parent_node, ns['cbc'] + 'ProfileID')
         ubl_profile_id.text = 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0'
-        
         doc_id = etree.SubElement(parent_node, ns['cbc'] + 'ID')
         doc_id.text = self.number
         issue_date = etree.SubElement(parent_node, ns['cbc'] + 'IssueDate')
         issue_date.text = self.date_invoice.strftime('%Y-%m-%d')
+        due_date = etree.SubElement(pay_means, ns['cbc'] + 'PaymentDueDate')
+        due_date.text = self.date_due.strftime('%Y-%m-%d')
         type_code = etree.SubElement(
             parent_node, ns['cbc'] + 'InvoiceTypeCode')
         if self.type == 'out_invoice':
@@ -46,7 +47,7 @@ class AccountInvoice(models.Model):
         doc_currency.text = self.currency_id.name
         buyer_ref = etree.SubElement(
             parent_node, ns['cbc'] + 'BuyerReference')
-        buyer_ref.text = self.commercial_partner_id.client_order_ref
+        buyer_ref.text = self.name
 
     @api.multi
     def _ubl_add_order_reference(self, parent_node, ns, version='2.1'):
@@ -58,8 +59,8 @@ class AccountInvoice(models.Model):
         order_ref_id.text = self.reference
         order_sale_id = etree.SubElement(
             order_ref, ns['cbc'] + 'SalesOrderID')
-        order_ref_id.text = self.origin 
-        # ~ order_sale_id.text = self.reference
+        # ~ order_sale_id.text = self.origin 
+        order_sale_id.text = self.customer_invoice_ref
 
     @api.multi
     def _ubl_get_contract_document_reference_dict(self):

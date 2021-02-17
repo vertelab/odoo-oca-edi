@@ -26,14 +26,14 @@ class BaseUbl(models.AbstractModel):
         pay_means_code = etree.SubElement(
             pay_means, ns['cbc'] + 'PaymentMeansCode', name=payment_mode.payment_method_id.name or 'No Peppol')
         pay_means_code.text = str(payment_mode.payment_method_id.code)
-        pay_due_date = etree.SubElement(pay_means, ns['cbc'] + 'PaymentDueDate')
-        pay_due_date.text = date_due.strftime('%Y-%m-%d')
+        # ~ pay_due_date = etree.SubElement(pay_means, ns['cbc'] + 'PaymentDueDate')
+        # ~ pay_due_date.text = date_due.strftime('%Y-%m-%d')
         payment_id = etree.SubElement(pay_means, ns['cbc'] + 'PaymentID')
-        payment_id.text = payment_identifier
+        payment_id.text = res_obj.name.split('/')[0]
         payee_fin_account = etree.SubElement(
             pay_means, ns['cac'] + 'PayeeFinancialAccount')
         payee_fin_account_id = etree.SubElement(payee_fin_account, ns['cbc'] + 'ID')
-        payee_fin_account_id.text = '57944316' + res_obj.move_id
+        payee_fin_account_id.text = '57944316'
         financial_inst_branch = etree.SubElement(payee_fin_account, ns['cac'] + 'FinancialInstitutionBranch')
         financial_inst_id = etree.SubElement(financial_inst_branch, ns['cbc'] + 'ID')
         financial_inst_id.text = 'SE:BANKGIRO'
