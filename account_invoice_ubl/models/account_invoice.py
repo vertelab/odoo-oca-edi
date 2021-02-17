@@ -46,17 +46,20 @@ class AccountInvoice(models.Model):
         doc_currency.text = self.currency_id.name
         buyer_ref = etree.SubElement(
             parent_node, ns['cbc'] + 'BuyerReference')
-        buyer_ref.text = self.commercial_partner_id.name
+        buyer_ref.text = self.commercial_partner_id.client_order_ref
 
     @api.multi
     def _ubl_add_order_reference(self, parent_node, ns, version='2.1'):
         self.ensure_one()
-        if self.name:
-            order_ref = etree.SubElement(
-                parent_node, ns['cac'] + 'OrderReference')
-            order_ref_id = etree.SubElement(
-                order_ref, ns['cbc'] + 'ID')
-            order_ref_id.text = self.origin
+        order_ref = etree.SubElement(
+            parent_node, ns['cac'] + 'OrderReference')
+        order_ref_id = etree.SubElement(
+            order_ref, ns['cbc'] + 'ID')
+        order_ref_id.text = self.reference
+        order_sale_id = etree.SubElement(
+            order_ref, ns['cbc'] + 'SalesOrderID')
+        order_ref_id.text = self.origin 
+        # ~ order_sale_id.text = self.reference
 
     @api.multi
     def _ubl_get_contract_document_reference_dict(self):
@@ -166,7 +169,7 @@ class AccountInvoice(models.Model):
         # to get a *tax_excluded* price unit
         # ~ if not float_is_zero(qty, precision_digits=qty_precision):
         price_unit = float_round(
-            iline.price_subtotal / float(qty),
+            iline.price_subtotal / float(qty) or iline.price_total / float(qty),
             precision_digits=price_precision)
         price_amount.text = '%0.*f' % (price_precision, price_unit)
         if uom_unece_code:

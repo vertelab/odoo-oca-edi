@@ -82,9 +82,8 @@ class BaseUbl(models.AbstractModel):
         if contact_id_text:
             contact_id = etree.SubElement(contact, ns['cbc'] + 'ID')
             contact_id.text = contact_id_text
-        if partner.parent_id:
-            contact_name = etree.SubElement(contact, ns['cbc'] + 'Name')
-            contact_name.text = partner.name if partner.name else partner.parent_id.name
+        contact_name = etree.SubElement(contact, ns['cbc'] + 'Name')
+        contact_name.text = partner.name if partner.name else partner.parent_id.name
         phone = partner.phone or partner.commercial_partner_id.phone
         if phone:
             telephone = etree.SubElement(contact, ns['cbc'] + 'Telephone')
@@ -143,10 +142,10 @@ class BaseUbl(models.AbstractModel):
                 parent_node, ns['cac'] + 'PartyTaxScheme')
             company_id = etree.SubElement(
                 party_tax_scheme, ns['cbc'] + 'CompanyID')
-            company_id.text = commercial_partner.vat
+            company_id.text = 'TAX'
             # ~ tax_scheme = etree.SubElement(
                 # ~ party_tax_scheme, ns['cac'] + 'ID')
-            # ~ tax_scheme.text = 'VAT'
+            # ~ tax_scheme.text = 'Godkänd för F-skatt'
             tax_scheme_dict = self._ubl_get_tax_scheme_dict_from_partner(
                 commercial_partner)
             self._ubl_add_tax_scheme(
@@ -183,7 +182,7 @@ class BaseUbl(models.AbstractModel):
         # ~ raise Warning(endpoint_id.text)
         party_identification = etree.SubElement(party, ns['cac'] + 'PartyIdentification')
         party_id = etree.SubElement(party_identification, ns['cbc'] + 'ID')
-        party_id.text = commercial_partner.gln_number_vertel or commercial_partner.company_org_number or commercial_partner.vat or None
+        party_id.text = str(commercial_partner.id)
         party_name = etree.SubElement(party, ns['cac'] + 'PartyName')
         name = etree.SubElement(party_name, ns['cbc'] + 'Name')
         name.text = commercial_partner.name if commercial_partner.name else partner.parent_id.name
