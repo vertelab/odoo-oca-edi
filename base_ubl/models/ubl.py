@@ -133,23 +133,51 @@ class BaseUbl(models.AbstractModel):
             'type_code': False,
             }
         return tax_scheme_dict
+        
+    @api.model
+    def _ubl_get_tax_scheme_dict_from_partner_2(self, commercial_partner):
+        tax_scheme_dict = {
+            'id': 'TAX',
+            'name': False,
+            'type_code': False,
+            }
+        return tax_scheme_dict
 
     @api.model
     def _ubl_add_party_tax_scheme(
             self, commercial_partner, parent_node, ns, version='2.1'):
         # ~ if commercial_partner.vat:
-        party_tax_scheme = etree.SubElement(
-            parent_node, ns['cac'] + 'PartyTaxScheme')
-        company_id = etree.SubElement(
-            party_tax_scheme, ns['cbc'] + 'CompanyID')
-        company_id.text = 'SE' + commercial_partner.company_org_number.replace('-','') + '01'
-        # ~ tax_scheme = etree.SubElement(
-            # ~ party_tax_scheme, ns['cac'] + 'ID')
-        # ~ tax_scheme.text = 'Godkänd för F-skatt'
-        tax_scheme_dict = self._ubl_get_tax_scheme_dict_from_partner(
-            commercial_partner)
-        self._ubl_add_tax_scheme(
-            tax_scheme_dict, party_tax_scheme, ns, version=version)
+        if commercial_partner.vat:
+            party_tax_scheme = etree.SubElement(
+                parent_node, ns['cac'] + 'PartyTaxScheme')
+            company_id = etree.SubElement(
+                party_tax_scheme, ns['cbc'] + 'CompanyID')
+            company_id.text = commercial_partner.vat
+            tax_scheme_dict = self._ubl_get_tax_scheme_dict_from_partner(
+                commercial_partner)
+            self._ubl_add_tax_scheme(
+                tax_scheme_dict, party_tax_scheme, ns, version=version)
+        elif commercial_partner.company_org_number:
+            party_tax_scheme = etree.SubElement(
+                parent_node, ns['cac'] + 'PartyTaxScheme')
+            company_id = etree.SubElement(
+                party_tax_scheme, ns['cbc'] + 'CompanyID')
+            company_id.text = 'SE' + commercial_partner.company_org_number.replace('-','') + '01'
+            
+            tax_scheme_dict = self._ubl_get_tax_scheme_dict_from_partner(
+                commercial_partner)
+            self._ubl_add_tax_scheme(
+                tax_scheme_dict, party_tax_scheme, ns, version=version)
+            
+    @api.model
+    def _ubl_add_party_tax_scheme_2(
+            self, commercial_partner, parent_node, ns, version='2.1'):
+        party_tax_scheme_2 = etree.SubElement(parent_node, ns['cac'] + 'PartyTaxScheme')
+        company_id_2 = etree.SubElement(party_tax_scheme_2, ns['cbc'] + 'CompanyID')
+        company_id_2.text = 'Godkänd för F-skatt'
+        tax_scheme_dict = self._ubl_get_tax_scheme_dict_from_partner_2(commercial_partner)
+        self._ubl_add_tax_scheme(tax_scheme_dict, party_tax_scheme_2, ns, version=version)
+            
 
     @api.model
     def _ubl_add_party_legal_entity(
@@ -162,7 +190,10 @@ class BaseUbl(models.AbstractModel):
         registration_name.text = partner.name or partner.parent_id.name
         company_id = etree.SubElement(
             party_legal_entity, ns['cbc'] + 'CompanyID')
-        company_id.text = partner.company_org_number.replace('-','') or commercial_partner.company_org_number.replace('-','')
+        if partner.company_org_number or commercial_partner.company_org_number:
+            company_id.text = partner.company_org_number.replace('-','') or commercial_partner.company_org_number.replace('-','')
+        else:
+            company_id.text = 'N/A'
         # ~ self._ubl_add_address(
             # ~ commercial_partner, 'RegistrationAddress', party_legal_entity,
             # ~ ns, version=version)
@@ -182,17 +213,20 @@ class BaseUbl(models.AbstractModel):
         # ~ raise Warning(endpoint_id.text)
         party_identification = etree.SubElement(party, ns['cac'] + 'PartyIdentification')
         party_id = etree.SubElement(party_identification, ns['cbc'] + 'ID')
-        party_id.text = str(commercial_partner.id)
+        if endpoint_id.text == '7300009018680':
+            party_id.text = 'SE556656628601'
+        else:
+            party_id.text = str(commercial_partner.id)
         party_name = etree.SubElement(party, ns['cac'] + 'PartyName')
         name = etree.SubElement(party_name, ns['cbc'] + 'Name')
         name.text = commercial_partner.name if commercial_partner.name else partner.parent_id.name
-        
-        
         self._ubl_add_address(
             commercial_partner, 'PostalAddress', party, ns, version=version)
         self._ubl_add_party_tax_scheme(
             commercial_partner, party, ns, version=version)
-        # ~ if company:
+        if commercial_partner.company_org_number == '556656-6286':
+            self._ubl_add_party_tax_scheme_2(
+            commercial_partner, party, ns, version=version)
         self._ubl_add_party_legal_entity(commercial_partner, party, ns, version='2.1')
         self._ubl_add_contact(partner, party, ns, version=version)
 
@@ -465,15 +499,16 @@ class BaseUbl(models.AbstractModel):
             'type_code': False,
             }
         return tax_scheme_dict
+    
 
     @api.model
     def _ubl_add_tax_scheme(
             self, tax_scheme_dict, parent_node, ns, version='2.1'):
         tax_scheme = etree.SubElement(parent_node, ns['cac'] + 'TaxScheme')
-        # ~ if tax_scheme_dict.get('id'):
-        tax_scheme_id = etree.SubElement(
-            tax_scheme, ns['cbc'] + 'ID')
-        tax_scheme_id.text = 'TAX'
+        if tax_scheme_dict.get('id'):
+            tax_scheme_id = etree.SubElement(
+                tax_scheme, ns['cbc'] + 'ID')
+            tax_scheme_id.text = tax_scheme_dict['id']
         if tax_scheme_dict.get('name'):
             tax_scheme_name = etree.SubElement(tax_scheme, ns['cbc'] + 'Name')
             tax_scheme_name.text = tax_scheme_dict['name']

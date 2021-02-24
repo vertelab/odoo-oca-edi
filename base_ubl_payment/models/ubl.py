@@ -17,26 +17,29 @@ class BaseUbl(models.AbstractModel):
             self, partner_bank, payment_mode, date_due, parent_node, ns,
             payment_identifier=None, version='2.1'):
                 
-        logger.warn(self.env.context)
-        res_id = self.env.context.get('params', {}).get('id')
+        logger.warn('Haze %s' %self.env.context)
+        res_id = self.env.context.get('params', {}).get('id') 
         res_model = self.env.context.get('params', {}).get('model')
-        res_obj = self.env[res_model].search([('id', '=', res_id)], limit=1)
+        res_obj = self.env[res_model].search([('id', '=', res_id)], limit=1) 
+        if res_id:
+            pay_means = etree.SubElement(parent_node, ns['cac'] + 'PaymentMeans')
+            pay_means_code = etree.SubElement(
+                pay_means, ns['cbc'] + 'PaymentMeansCode', name=payment_mode.payment_method_id.name or 'Electronic')
+            pay_means_code.text = payment_mode.payment_method_id.unece_code or '30'
+            # ~ pay_due_date = etree.SubElement(pay_means, ns['cbc'] + 'PaymentDueDate')
+            # ~ pay_due_date.text = date_due.strftime('%Y-%m-%d')
+            payment_id = etree.SubElement(pay_means, ns['cbc'] + 'PaymentID')
+            payment_id.text = res_obj.reference.split('/')[0]
+            payee_fin_account = etree.SubElement(
+                pay_means, ns['cac'] + 'PayeeFinancialAccount')
+            payee_fin_account_id = etree.SubElement(payee_fin_account, ns['cbc'] + 'ID')
+            payee_fin_account_id.text = '57944316'
+            financial_inst_branch = etree.SubElement(payee_fin_account, ns['cac'] + 'FinancialInstitutionBranch')
+            financial_inst_id = etree.SubElement(financial_inst_branch, ns['cbc'] + 'ID')
+            financial_inst_id.text = 'SE:BANKGIRO'
         
-        pay_means = etree.SubElement(parent_node, ns['cac'] + 'PaymentMeans')
-        pay_means_code = etree.SubElement(
-            pay_means, ns['cbc'] + 'PaymentMeansCode', name=payment_mode.payment_method_id.name or 'No Peppol')
-        pay_means_code.text = str(payment_mode.payment_method_id.code)
-        # ~ pay_due_date = etree.SubElement(pay_means, ns['cbc'] + 'PaymentDueDate')
-        # ~ pay_due_date.text = date_due.strftime('%Y-%m-%d')
-        payment_id = etree.SubElement(pay_means, ns['cbc'] + 'PaymentID')
-        payment_id.text = res_obj.name.split('/')[0]
-        payee_fin_account = etree.SubElement(
-            pay_means, ns['cac'] + 'PayeeFinancialAccount')
-        payee_fin_account_id = etree.SubElement(payee_fin_account, ns['cbc'] + 'ID')
-        payee_fin_account_id.text = '57944316'
-        financial_inst_branch = etree.SubElement(payee_fin_account, ns['cac'] + 'FinancialInstitutionBranch')
-        financial_inst_id = etree.SubElement(financial_inst_branch, ns['cbc'] + 'ID')
-        financial_inst_id.text = 'SE:BANKGIRO'
+            
+            
         
         
         

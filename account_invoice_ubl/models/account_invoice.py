@@ -31,7 +31,7 @@ class AccountInvoice(models.Model):
         doc_id.text = self.number
         issue_date = etree.SubElement(parent_node, ns['cbc'] + 'IssueDate')
         issue_date.text = self.date_invoice.strftime('%Y-%m-%d')
-        due_date = etree.SubElement(pay_means, ns['cbc'] + 'PaymentDueDate')
+        due_date = etree.SubElement(parent_node, ns['cbc'] + 'DueDate')
         due_date.text = self.date_due.strftime('%Y-%m-%d')
         type_code = etree.SubElement(
             parent_node, ns['cbc'] + 'InvoiceTypeCode')
@@ -47,7 +47,8 @@ class AccountInvoice(models.Model):
         doc_currency.text = self.currency_id.name
         buyer_ref = etree.SubElement(
             parent_node, ns['cbc'] + 'BuyerReference')
-        buyer_ref.text = self.name
+        buyer_ref.text = self.customer_invoice_ref if self.customer_invoice_ref else 'N/A'
+        # ~ buyer_ref.text = self.customer_invoice_ref if self.customer_invoice_ref else 'N/A'
 
     @api.multi
     def _ubl_add_order_reference(self, parent_node, ns, version='2.1'):
@@ -56,11 +57,11 @@ class AccountInvoice(models.Model):
             parent_node, ns['cac'] + 'OrderReference')
         order_ref_id = etree.SubElement(
             order_ref, ns['cbc'] + 'ID')
-        order_ref_id.text = self.reference
+        order_ref_id.text = self.name if self.name else 'N/A'
         order_sale_id = etree.SubElement(
             order_ref, ns['cbc'] + 'SalesOrderID')
-        # ~ order_sale_id.text = self.origin 
-        order_sale_id.text = self.customer_invoice_ref
+        order_sale_id.text = self.origin 
+        # ~ order_sale_id.text = self.customer_invoice_ref
 
     @api.multi
     def _ubl_get_contract_document_reference_dict(self):
@@ -173,13 +174,13 @@ class AccountInvoice(models.Model):
             iline.price_subtotal / float(qty) or iline.price_total / float(qty),
             precision_digits=price_precision)
         price_amount.text = '%0.*f' % (price_precision, price_unit)
-        if uom_unece_code:
-            base_qty = etree.SubElement(
-                price_node, ns['cbc'] + 'BaseQuantity',
-                unitCode=uom_unece_code)
-        else:
-            base_qty = etree.SubElement(price_node, ns['cbc'] + 'BaseQuantity')
-        base_qty.text = '%0.*f' % (qty_precision, qty)
+        # ~ if uom_unece_code:
+            # ~ base_qty = etree.SubElement(
+                # ~ price_node, ns['cbc'] + 'BaseQuantity',
+                # ~ unitCode=uom_unece_code)
+        # ~ else:
+            # ~ base_qty = etree.SubElement(price_node, ns['cbc'] + 'BaseQuantity')
+        # ~ base_qty.text = '1'
         
 
     def _ubl_add_invoice_line_tax_total(
@@ -257,7 +258,7 @@ class AccountInvoice(models.Model):
             self._ubl_add_delivery(self.partner_shipping_id, xml_root, ns)
         # Put paymentmeans block even when invoice is paid ?
         payment_identifier = self.get_payment_identifier()
-        self._ubl_add_payment_means(
+        self.with_context({'params':{'id':self.id, 'model':self._name}})._ubl_add_payment_means(
             self.partner_bank_id, self.payment_mode_id, self.date_due,
             xml_root, ns, payment_identifier=payment_identifier,
             version=version)
