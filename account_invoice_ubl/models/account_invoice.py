@@ -48,7 +48,7 @@ class AccountInvoice(models.Model):
         buyer_ref = etree.SubElement(
             parent_node, ns['cbc'] + 'BuyerReference')
         buyer_ref.text = self.customer_invoice_ref if self.customer_invoice_ref else 'N/A'
-        # ~ buyer_ref.text = self.customer_invoice_ref if self.customer_invoice_ref else 'N/A'
+
 
     @api.multi
     def _ubl_add_order_reference(self, parent_node, ns, version='2.1'):
@@ -60,8 +60,7 @@ class AccountInvoice(models.Model):
         order_ref_id.text = self.name if self.name else 'N/A'
         order_sale_id = etree.SubElement(
             order_ref, ns['cbc'] + 'SalesOrderID')
-        order_sale_id.text = self.origin 
-        # ~ order_sale_id.text = self.customer_invoice_ref
+        order_sale_id.text = self.client_order_ref if self.client_order_ref else 'N/A'
 
     @api.multi
     def _ubl_get_contract_document_reference_dict(self):
