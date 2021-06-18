@@ -60,7 +60,9 @@ class AccountInvoice(models.Model):
         order_ref_id.text = self.name if self.name else 'N/A'
         order_sale_id = etree.SubElement(
             order_ref, ns['cbc'] + 'SalesOrderID')
-        order_sale_id.text = self.client_order_ref if self.client_order_ref else 'N/A'
+        sale_orders = self.env['sale.order'].search('invoice_ids', 'in', self.id)
+        _logger.debug(f'Saleorders to add: {sale_orders}')
+        order_sale_id.text = ','.join(sale_orders.mapped('client_order_ref'))
 
     @api.multi
     def _ubl_get_contract_document_reference_dict(self):
