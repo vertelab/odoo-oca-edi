@@ -61,7 +61,7 @@ class AccountInvoice(models.Model):
         order_sale_id = etree.SubElement(
             order_ref, ns['cbc'] + 'SalesOrderID')
         sale_orders = self.env['sale.order'].search([['invoice_ids', '=', self.id]])
-        _logger.debug(f'Saleorders to add: {sale_orders}')
+        logger.debug(f'Saleorders to add: {sale_orders}')
         order_sale_id.text = ','.join(sale_orders.mapped('client_order_ref'))
 
     @api.multi
