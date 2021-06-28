@@ -62,7 +62,9 @@ class AccountInvoice(models.Model):
             order_ref, ns['cbc'] + 'SalesOrderID')
         sale_orders = self.env['sale.order'].search([['invoice_ids', '=', self.id]])
         logger.debug(f'Saleorders to add: {sale_orders}')
-        order_sale_id.text = ','.join(sale_orders.mapped('client_order_ref'))
+        # Should be solved with a lambda directly in mapped?
+        res = [str(x) for x in sale_order.mapped('client_order_ref') if x]
+        order_sale_id.text = ','.join(res)
 
     @api.multi
     def _ubl_get_contract_document_reference_dict(self):
