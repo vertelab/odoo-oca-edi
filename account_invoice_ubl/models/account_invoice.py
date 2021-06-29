@@ -63,7 +63,7 @@ class AccountInvoice(models.Model):
         sale_orders = self.env['sale.order'].search([['invoice_ids', '=', self.id]])
         logger.debug(f'Saleorders to add: {sale_orders}')
         # Should be solved with a lambda directly in mapped?
-        res = [str(x) for x in sale_order.mapped('client_order_ref') if x]
+        res = [str(x) for x in sale_orders.mapped('client_order_ref') if x]
         order_sale_id.text = ','.join(res)
 
     @api.multi
