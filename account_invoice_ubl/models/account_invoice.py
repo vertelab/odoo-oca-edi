@@ -172,10 +172,10 @@ class AccountInvoice(models.Model):
         price_unit = 0.0
         # Use price_subtotal/qty to compute price_unit to be sure
         # to get a *tax_excluded* price unit
-        # ~ if not float_is_zero(qty, precision_digits=qty_precision):
-        price_unit = float_round(
-            iline.price_subtotal / float(qty) or iline.price_total / float(qty),
-            precision_digits=price_precision)
+        if not float_is_zero(qty, precision_digits=qty_precision):
+            price_unit = float_round(
+                iline.price_subtotal / float(qty) or iline.price_total / float(qty),
+                precision_digits=price_precision)
         price_amount.text = '%0.*f' % (price_precision, price_unit)
         # ~ if uom_unece_code:
             # ~ base_qty = etree.SubElement(
@@ -232,14 +232,6 @@ class AccountInvoice(models.Model):
             # ~ self._ubl_add_tax_subtotal(
                    # ~ False, False, False, False,
                     # ~ tax_total_node, ns, version=version)
-        
-            
-    
-            
-    
-        
-        
-        
 
     @api.multi
     def generate_invoice_ubl_xml_etree(self, version='2.1'):
