@@ -29,7 +29,7 @@ class BaseUbl(models.AbstractModel):
             # ~ pay_due_date = etree.SubElement(pay_means, ns['cbc'] + 'PaymentDueDate')
             # ~ pay_due_date.text = date_due.strftime('%Y-%m-%d')
             payment_id = etree.SubElement(pay_means, ns['cbc'] + 'PaymentID')
-            payment_id.text = res_obj.reference.split('/')[0]
+            payment_id.text = res_obj.reference.split('/')[0] if res_obj.reference else ''
             payee_fin_account = etree.SubElement(
                 pay_means, ns['cac'] + 'PayeeFinancialAccount')
             payee_fin_account_id = etree.SubElement(payee_fin_account, ns['cbc'] + 'ID')
