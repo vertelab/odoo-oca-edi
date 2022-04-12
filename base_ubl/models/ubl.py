@@ -244,7 +244,6 @@ class BaseUbl(models.AbstractModel):
         customer_party_root = etree.SubElement(
             parent_node, ns['cac'] + node_name)
 
-        # THIS IS WRONG!!
         if not company and partner.commercial_partner_id.ref:
             customer_ref = etree.SubElement(
                 customer_party_root, ns['cbc'] + 'SupplierAssignedAccountID')
