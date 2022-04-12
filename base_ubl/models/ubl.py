@@ -243,9 +243,10 @@ class BaseUbl(models.AbstractModel):
                 partner = company.partner_id
         customer_party_root = etree.SubElement(
             parent_node, ns['cac'] + node_name)
+
         if not company and partner.commercial_partner_id.ref:
             customer_ref = etree.SubElement(
-                customer_party_root, ns['cbc'] + 'AccountingCustomerParty')
+                customer_party_root, ns['cbc'] + 'SupplierAssignedAccountID')
             customer_ref.text = partner.commercial_partner_id.ref
         self._ubl_add_party(
             partner, company, 'Party', customer_party_root, ns,
